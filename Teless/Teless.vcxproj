@@ -145,11 +145,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Env.hpp" />
+    <ClInclude Include="error.hpp" />
     <ClInclude Include="lexer.hpp" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Teless.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Env.cpp" />
     <ClCompile Include="lexer.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Teless.cpp" />
