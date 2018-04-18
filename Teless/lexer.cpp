@@ -59,7 +59,9 @@ static std::map<std::string, KeywordKind> keywordTable = {
 	{ "elif",	KeywordKind::ELIF },
 	{ "else",	KeywordKind::ELSE },
 	{ "for",	KeywordKind::FOR },
-	{ "val",	KeywordKind::VAL }
+	{ "val",	KeywordKind::VAL },
+	{ "true",	KeywordKind::TRUE },
+	{ "false",	KeywordKind::FALSE }
 };
 
 static bool isIdentOrKeyword(int c);
@@ -77,8 +79,8 @@ Lexer::~Lexer() {
 
 TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fileName, Location location) {
 	std::istringstream stream(source);
-	int c;
 	TokenStream result;
+	int c;
 
 	while (!stream.eof())
 	{
@@ -110,10 +112,16 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 			});
 		}
 
+		// 공백은 건너뛴다.
+		else if (std::isspace(c))
+		{
+			stream.get();
+		}
+
 		// 큰따옴표 (문자열의 시작) 인 경우
 		else if (c == '\"')
 		{
-
+			result.push(getString(stream, location));
 		}
 
 		// 식별자일 경우
@@ -138,18 +146,10 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 
 static bool isIdentOrKeyword(int ch) {
 	static std::set<char> chars = {
-		'!',
-		'$',
-		'%',
-		'&',
-		'*',
-		'+',
-		'-',
-		'/',
-		'<',
-		'=',
-		'>',
-		'?',
+		'!', '$', '%',
+		'&', '*', '+',
+		'-', '/', '<',
+		'=', '>', '?',
 		'@'
 	};
 	return std::isalpha(ch) || std::isdigit(ch) || (chars.find(ch) != chars.end());
@@ -225,17 +225,17 @@ static Token getString(std::istringstream& code, Location location) {
 		{ '\"', '\"' },
 		{ '\?', '\?' },
 		{ '\\', '\\' },
-		{ '0', '\0' },
-		{ 'a', '\a' },
-		{ 'b', '\b' },
-		{ 'n', '\n' },
-		{ 'r', '\r' },
-		{ 't', '\t' }
+		{ '0',	'\0' },
+		{ 'a',	'\a' },
+		{ 'b',	'\b' },
+		{ 'n',	'\n' },
+		{ 'r',	'\r' },
+		{ 't',	'\t' }
 	};
 	code.get();	// 문자열 시작
 	int c;
 	std::string resultString = "";
-	do
+	while (true)
 	{
 		c = code.get();
 
@@ -248,10 +248,20 @@ static Token getString(std::istringstream& code, Location location) {
 				resultString += escapeSequenceSet[esc];
 			}
 		}
+
+		// 그 외
 		else
 		{
+			if (c == '\"')
+				break;
 			resultString += c;
 		}
 	}
-	while (c != '\"');
+	return{
+		location,
+		TokenKind::STRING,
+		KeywordKind::NO_KEYWORD,
+		resultString,
+		std::stod(resultString)
+	};
 }

@@ -4,6 +4,7 @@
 
 #include "error.hpp"
 #include "lexer.hpp"
+#include "Parser.hpp"
 
 static const int VERSION_MAJOR = 1;
 static const int VERSION_MINOR = 0;
@@ -25,6 +26,7 @@ int main(const int argc, const char** argv) {
 	// 可记 按眉 积己栏肺 角青 牢荐甫 包府
 	Option* opt{ new Option };
 	parseOption(opt, argc, argv);
+	initParser();
 
 	if (opt->get() == Option::REPL)
 	{
@@ -54,6 +56,7 @@ public:
 	void set(options opt) noexcept;
 	options get() const noexcept;
 	void setFileName(const std::string& fileName);
+	const std::string& getFileName();
 private:
 	options option;
 	std::string fileName;
@@ -77,6 +80,10 @@ Option::options Option::get() const noexcept {
 
 void Option::setFileName(const std::string& fileName) {
 	this->fileName = fileName;
+}
+
+const std::string& Option::getFileName() {
+	return this->fileName;
 }
 
 void parseOption(Option* opt, const int argc, const char** argv) {
@@ -135,13 +142,21 @@ void repl_loop(Option* opt) {
 	std::string shell{ "Teless> " };
 	std::cout << initMessage;
 
+	Lexer lexer;
+	TokenStream tokenStream;
+	Parser parser;
+	Node* root;
+
+	int locationLine = 0;
+
 	// REPL 风橇
 	while (true)
 	{
 		std::cout << shell;
 		std::string line;
 		std::getline(std::cin, line);
-		
+		locationLine++;
+
 		int openParens = count(line, '(');
 		int closeParens = count(line, ')');
 		while (openParens != closeParens)
@@ -149,11 +164,21 @@ void repl_loop(Option* opt) {
 			std::cout << "... ";
 			std::string more;
 			std::getline(std::cin, more);
+			locationLine++;
+
 			line += more;
 			openParens += count(more, '(');
 			closeParens += count(more, ')');
 		}
 
+		// Read
+		tokenStream = lexer.lexicalAnalyze(line, opt->getFileName(), { locationLine });
+		root = parser.parse(tokenStream);
+
+		// Execute
+
+		// Print
+		
 	}
 }
 
