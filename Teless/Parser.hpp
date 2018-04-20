@@ -14,7 +14,10 @@ enum class NodeKind {
 	FOR,
 	VAL,
 	LITERAL,
-	STRING
+	STRING,
+	VALREF,
+	NIL,
+	ERROR
 };
 
 class Node {
@@ -27,12 +30,6 @@ public:
 	// 노드의 종류
 	NodeKind kind;
 
-	// 이전 원소, 다음 원소
-	struct {
-		Node* prev;
-		Node* next;
-	} list;
-
 	// 외부 환경 저장용
 	struct {
 		Node* environment;
@@ -43,14 +40,14 @@ public:
 		bool isLambda;
 		std::string ident;	// 만약 isLambda가 참이라면, 이 필드는 무의미함
 		std::list<std::string> arguments;
-		Node* body;			
+		std::list<Node*> body;
 	} func;
 
 	// 함수 호출
 	struct {
 		std::string ident;
 		Node* where;		// 함수 정의가 들어 있는 노드
-		Node* arguments;
+		std::list<Node*> argus;
 	} funcCall;
 
 	// 조건절
@@ -70,20 +67,26 @@ public:
 	// 식별자 정의
 	struct {
 		std::string ident;
-		Node* initExpr;
+		Node* expr;
 	} valDef;
 
 	// 리터럴(숫자, 불)
 	struct {
 		bool isNumber;
 		double number;
-		bool truth;			// true or false literal
+		bool truth;			// true or false 리터럴
 	} literal;
 
 	// 문자열
 	struct {
 		std::string str;
 	} string;
+
+	// 변수 참조
+	struct {
+		std::string ident;
+		Node* expr;			// 향후 lazy evaluation을 위해..
+	} valRef;
 };
 
 class Parser {

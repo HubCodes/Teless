@@ -5,7 +5,12 @@
 #include <iostream>
 #include <cstdlib>
 
-using ErrorStack = std::stack<std::stack<std::string>>;
+struct ErrorInfo {
+	std::string msg;
+	Location location;
+};
+
+using ErrorStack = std::stack<ErrorInfo>;
 
 class ErrorManager final {
 public:
@@ -14,14 +19,9 @@ public:
 		return manager;
 	}
 
-	void pushNewErrorContext() {
-		stack.push(std::stack<std::string>());
+	void pushError(const ErrorInfo& errorMessage) {
+		stack.push(errorMessage);
 	}
-
-	void pushError(const std::string& errorMessage) {
-		stack.top().push(errorMessage);
-	}
-
 	
 private:
 	explicit ErrorManager() {
@@ -38,4 +38,8 @@ __attribute__((noreturn))
 inline void die(const std::string& errorMsg) {
 	std::cerr << errorMsg << '\n';
 	std::exit(EXIT_FAILURE);
+}
+
+inline void errorOccur(const ErrorInfo& errorMsg) {
+	ErrorManager::get().pushError(errorMsg);
 }

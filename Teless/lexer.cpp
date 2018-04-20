@@ -26,19 +26,19 @@ TokenStream::~TokenStream() {
 
 }
 
-void TokenStream::push(const Token& tok) {
+void TokenStream::push(Token* tok) {
 	stream.push_back(tok);
 	nowPtr++;
 }
 
-const Token& TokenStream::get() {
+Token* TokenStream::get() {
 	if (nowPtr >= stream.size()) return stream.back();
 	auto&& result = peek();
 	nowPtr++;
 	return result;
 }
 
-const Token& TokenStream::peek() {
+Token* TokenStream::peek() {
 	return stream[nowPtr];
 }
 
@@ -55,6 +55,7 @@ bool TokenStream::eof() {
 
 static std::map<std::string, KeywordKind> keywordTable = {
 	{ "func",	KeywordKind::FUNC },
+	{ "lambda",	KeywordKind::FUNC },
 	{ "if",		KeywordKind::IF },
 	{ "elif",	KeywordKind::ELIF },
 	{ "else",	KeywordKind::ELSE },
@@ -65,9 +66,9 @@ static std::map<std::string, KeywordKind> keywordTable = {
 };
 
 static bool isIdentOrKeyword(int c);
-static Token getIdentOrKeyword(std::istringstream& code, Location location);
-static Token getNumber(std::istringstream& code, Location location);
-static Token getString(std::istringstream& code, Location location);
+static Token* getIdentOrKeyword(std::istringstream& code, Location location);
+static Token* getNumber(std::istringstream& code, Location location);
+static Token* getString(std::istringstream& code, Location location);
 
 Lexer::Lexer() {
 
@@ -90,7 +91,7 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 		if (c == '(')
 		{
 			stream.get();
-			result.push({
+			result.push(new Token{
 				location,
 				TokenKind::OPEN_PAREN,
 				KeywordKind::NO_KEYWORD,
@@ -103,7 +104,7 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 		else if (c == ')')
 		{
 			stream.get();
-			result.push({
+			result.push(new Token{
 				location,
 				TokenKind::CLOSE_PAREN,
 				KeywordKind::NO_KEYWORD,
@@ -155,7 +156,7 @@ static bool isIdentOrKeyword(int ch) {
 	return std::isalpha(ch) || std::isdigit(ch) || (chars.find(ch) != chars.end());
 }
 
-static Token getIdentOrKeyword(std::istringstream& code, Location location) {
+static Token* getIdentOrKeyword(std::istringstream& code, Location location) {
 	int c;
 	std::string ident = "";
 	do
@@ -169,24 +170,24 @@ static Token getIdentOrKeyword(std::istringstream& code, Location location) {
 	{
 		die("Code is not ended but Can't reach more codes...");
 	}
-	Token result;
-	result.location = location;
-	result.tokenStr = ident;
-	result.number = 0.0;
+	Token* result = new Token;
+	result->location = location;
+	result->tokenStr = ident;
+	result->number = 0.0;
 
 	// 만약 키워드라면
 	if (keywordTable.find(ident) != keywordTable.end())
 	{
-		result.tokenKind = TokenKind::KEYWORD;
-		result.keywordKind = keywordTable[ident];
+		result->tokenKind = TokenKind::KEYWORD;
+		result->keywordKind = keywordTable[ident];
 		return result;
 	}
-	result.tokenKind = TokenKind::IDENT;
-	result.keywordKind = KeywordKind::NO_KEYWORD;
+	result->tokenKind = TokenKind::IDENT;
+	result->keywordKind = KeywordKind::NO_KEYWORD;
 	return result;
 }
 
-static Token getNumber(std::istringstream& code, Location location) {
+static Token* getNumber(std::istringstream& code, Location location) {
 	int c;
 	std::string number = "";
 	bool noMoreDot = false;
@@ -201,8 +202,7 @@ static Token getNumber(std::istringstream& code, Location location) {
 			}
 			else
 			{
-				ErrorManager::get().pushNewErrorContext();
-				ErrorManager::get().pushError("Number has too many dots.");
+				errorOccur({ "Number has too many dots.", location });
 				break;
 			}			
 		}
@@ -210,7 +210,7 @@ static Token getNumber(std::istringstream& code, Location location) {
 	}
 	while (!std::isspace(c) && (std::isdigit(c)) && !code.eof());
 	double realNumber = std::stod(number);
-	return{
+	return new Token{
 		location,
 		TokenKind::NUMBER,
 		KeywordKind::NO_KEYWORD,
@@ -219,7 +219,7 @@ static Token getNumber(std::istringstream& code, Location location) {
 	};
 }
 
-static Token getString(std::istringstream& code, Location location) {
+static Token* getString(std::istringstream& code, Location location) {
 	static std::map<int, int> escapeSequenceSet = {
 		{ '\'', '\'' },
 		{ '\"', '\"' },
@@ -257,7 +257,7 @@ static Token getString(std::istringstream& code, Location location) {
 			resultString += c;
 		}
 	}
-	return{
+	return new Token{
 		location,
 		TokenKind::STRING,
 		KeywordKind::NO_KEYWORD,

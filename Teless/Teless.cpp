@@ -159,7 +159,7 @@ void repl_loop(Option* opt) {
 
 		int openParens = count(line, '(');
 		int closeParens = count(line, ')');
-		while (openParens != closeParens)
+		while (openParens > closeParens)
 		{
 			std::cout << "... ";
 			std::string more;
@@ -170,6 +170,8 @@ void repl_loop(Option* opt) {
 			openParens += count(more, '(');
 			closeParens += count(more, ')');
 		}
+		if (openParens != closeParens)
+			die("parentheses are unaligned.");
 
 		// Read
 		tokenStream = lexer.lexicalAnalyze(line, opt->getFileName(), { locationLine });

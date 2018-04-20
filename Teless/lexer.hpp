@@ -12,13 +12,13 @@ public:
 	TokenStream& operator=(const TokenStream& other);
 	virtual ~TokenStream();
 
-	void push(const Token& tok);
-	const Token& get();
-	const Token& peek();
+	void push(Token* tok);
+	Token* get();
+	Token* peek();
 	void unget();
 	bool eof();
 private:
-	std::vector<Token> stream;
+	std::vector<Token*> stream;
 	int nowPtr;
 };
 
