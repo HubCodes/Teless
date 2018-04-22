@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "lexer.hpp"
 #include "Parser.hpp"
+#include "Runtime.hpp"
 
 static const int VERSION_MAJOR = 1;
 static const int VERSION_MINOR = 0;
@@ -99,7 +100,7 @@ void parseOption(Option* opt, const int argc, const char** argv) {
 		// µµ¿ò¸»
 		if (0 == std::strncmp(argv[1], "-h", 2))
 		{
-			std::cout << "Usage: teless (option|filepath)"
+			std::cout << "Usage: " << argv[0] << " (option|filepath)"
 				"\n"
 				"	-h:	Show this help page.\n"
 				"	-v: Show version.";
@@ -135,7 +136,8 @@ void parseOption(Option* opt, const int argc, const char** argv) {
 void repl_loop(Option* opt) {
 	std::time_t now = std::time(nullptr);
 	std::string initMessage{
-		"Teless interactive shell Version " + std::to_string(VERSION_MAJOR) + '.' + 
+		"Teless interactive shell Version " + 
+		std::to_string(VERSION_MAJOR) + '.' + 
 		std::to_string(VERSION_MINOR) + '\n' + 
 		"Started on " + std::ctime(&now) + '\n'
 	};
@@ -145,7 +147,8 @@ void repl_loop(Option* opt) {
 	Lexer lexer;
 	TokenStream tokenStream;
 	Parser parser;
-	Node* root;
+	Runtime& runtime = Runtime::get();
+	Node* code;
 
 	int locationLine = 0;
 
@@ -175,12 +178,10 @@ void repl_loop(Option* opt) {
 
 		// Read
 		tokenStream = lexer.lexicalAnalyze(line, opt->getFileName(), { locationLine });
-		root = parser.parse(tokenStream);
+		code = parser.parse(tokenStream);
 
-		// Execute
-
-		// Print
-		
+		// Execute and print
+		runtime.run(code);
 	}
 }
 

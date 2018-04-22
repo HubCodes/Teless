@@ -3,19 +3,22 @@
 #include <list>
 
 #include "lexer.hpp"
+#include "Env.hpp"
 
 class Node;
 
 enum class NodeKind {
-	ENV,
 	FUNCDEF,
 	FUNCALL,
 	IF,
-	FOR,
+	ELIF,
+	ELSE,
 	VAL,
 	LITERAL,
 	STRING,
 	VALREF,
+	DATALIST,
+	RETURN,
 	NIL,
 	ERROR
 };
@@ -31,9 +34,7 @@ public:
 	NodeKind kind;
 
 	// 외부 환경 저장용
-	struct {
-		Node* environment;
-	} env;
+	Env* env;
 
 	// 함수/람다 정의
 	struct {
@@ -53,16 +54,10 @@ public:
 	// 조건절
 	struct {
 		Node* cond;
-		Node* then;
+		std::list<Node*> then;
 		Node* elif;
 		Node* els;
 	} ifStatement;
-
-	// 반복절
-	struct {
-		Node* iter;
-		Node* body;
-	} forStatement;
 
 	// 식별자 정의
 	struct {
@@ -82,11 +77,16 @@ public:
 		std::string str;
 	} string;
 
-	// 변수 참조
+	// 식별 상수 참조
 	struct {
 		std::string ident;
-		Node* expr;			// 향후 lazy evaluation을 위해..
+		Node* expr;			// 함수 객체 참조. + 향후 lazy evaluation을 위해.
 	} valRef;
+
+	// 데이터(로서의) 리스트
+	struct {
+		std::list<Node*> datas;
+	} datalist;
 };
 
 class Parser {

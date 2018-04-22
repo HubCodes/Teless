@@ -59,10 +59,10 @@ static std::map<std::string, KeywordKind> keywordTable = {
 	{ "if",		KeywordKind::IF },
 	{ "elif",	KeywordKind::ELIF },
 	{ "else",	KeywordKind::ELSE },
-	{ "for",	KeywordKind::FOR },
 	{ "val",	KeywordKind::VAL },
 	{ "true",	KeywordKind::TRUE },
-	{ "false",	KeywordKind::FALSE }
+	{ "false",	KeywordKind::FALSE },
+	{ "return",	KeywordKind::RETURN }
 };
 
 static bool isIdentOrKeyword(int c);
@@ -113,6 +113,32 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 			});
 		}
 
+		// 데이터 여는 괄호일 경우
+		else if (c == '[')
+		{
+			stream.get();
+			result.push(new Token{
+				location,
+				TokenKind::OPEN_DATA,
+				KeywordKind::NO_KEYWORD,
+				"[",
+				0.0
+			});
+		}
+
+		// 데이터 닫는 괄호일 경우
+		else if (c == ']')
+		{
+			stream.get();
+			result.push(new Token{
+				location,
+				TokenKind::CLOSE_DATA,
+				KeywordKind::NO_KEYWORD,
+				"]",
+				0.0
+			});
+		}
+
 		// 공백은 건너뛴다.
 		else if (std::isspace(c))
 		{
@@ -145,7 +171,7 @@ TokenStream Lexer::lexicalAnalyze(const std::string source, const std::string fi
 	}
 }
 
-static bool isIdentOrKeyword(int ch) {
+static bool isIdentOrKeyword(int c) {
 	static std::set<char> chars = {
 		'!', '$', '%',
 		'&', '*', '+',
@@ -153,7 +179,7 @@ static bool isIdentOrKeyword(int ch) {
 		'=', '>', '?',
 		'@'
 	};
-	return std::isalpha(ch) || std::isdigit(ch) || (chars.find(ch) != chars.end());
+	return std::isalpha(c) || std::isdigit(c) || (chars.find(c) != chars.end());
 }
 
 static Token* getIdentOrKeyword(std::istringstream& code, Location location) {
@@ -202,7 +228,10 @@ static Token* getNumber(std::istringstream& code, Location location) {
 			}
 			else
 			{
-				errorOccur({ "Number has too many dots.", location });
+				errorOccur({ 
+					"Number has too many dots.",
+					location 
+				});
 				break;
 			}			
 		}

@@ -15,6 +15,8 @@ public:
 	virtual ~Env();
 	
 	void setParent(Env* parent);
+	void pushChild(Env* child);
+	void pushIdent(const std::string& ident, Node* node);
 	bool existKey(const std::string& ident);
 	Node* getFromKey(const std::string& ident);
 private:

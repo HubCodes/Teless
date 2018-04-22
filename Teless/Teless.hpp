@@ -9,7 +9,7 @@ enum class KeywordKind {
 	IF,
 	ELIF,
 	ELSE,
-	FOR,
+	RETURN,
 	VAL,
 	FUNC,
 	TRUE,
@@ -19,6 +19,8 @@ enum class KeywordKind {
 enum class TokenKind {
 	OPEN_PAREN,
 	CLOSE_PAREN,
+	OPEN_DATA,
+	CLOSE_DATA,
 	KEYWORD,
 	IDENT,
 	NUMBER,
